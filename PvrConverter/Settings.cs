@@ -10,17 +10,27 @@ namespace PvrConverter
         /// <summary>
         /// Extensions that the PVR files could have
         /// </summary>
-        public List<string> Extensions = new List<string>() { "pvr" };
+        public List<string> Extensions;
 
         /// <summary>
         /// What directory to search by default when the app starts up.
         /// </summary>
-        public string DefaultSearchPath = @"";
+        public string DefaultSearchPath;
 
         /// <summary>
         /// What directory to send files to once they have been processed.
         /// </summary>
-        public string DefaultOutDirectory = @"";
+        public string DefaultOutDirectory;
+
+        /// <summary>
+        /// Set default values for a new settings instance
+        /// </summary>
+        private void setDefaults()
+        {
+            Extensions = new List<string>() { ".pvr", ".xxx" };
+            DefaultSearchPath = @"";
+            DefaultOutDirectory = @"";
+        }
 
         /// <summary>
         /// Load up a settings instance from file given a filename
@@ -32,7 +42,9 @@ namespace PvrConverter
         {
             if (!File.Exists(filename))
             {
-                new Settings().Save(filename);
+                Settings settings = new Settings();
+                settings.setDefaults();
+                settings.Save(filename);
             }
 
             Settings result;
