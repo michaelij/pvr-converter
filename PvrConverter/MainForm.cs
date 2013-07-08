@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace PvrConverter
         /// Application settings
         /// </summary>
         private Settings settings;
+
+        private List<FileInfo> fileList;
 
         /// <summary>
         /// Whether we want a GUI or the command line only.
@@ -39,35 +42,49 @@ namespace PvrConverter
         private void MainForm_Load(object sender, EventArgs e)
         {
             settings = Settings.Load("settings.xml");
+
             if (closeForCommandLine == true)
             {
                 this.Close();
                 return;
             }
+
+            populateFileList();
+            setupFileListView();
         }
 
-        private List<FileInfo> getFiles()
+        private void setupFileListView()
+        {
+            fileListView.Columns.Add("checkbox", "", 20);
+            fileListView.Columns.Add("name", "Name", 370);
+            fileListView.Columns.Add("size", "Size", 50);
+            fileListView.Columns.Add("status", "Status", 100);
+
+            populateFileListView();
+        }
+
+        private void populateFileList()
         {
             DirectoryInfo directoryInfo = new DirectoryInfo(settings.DefaultSearchPath);
             IEnumerable<FileInfo> files = directoryInfo.GetFilesByExtensions(settings.Extensions.ToArray());
-
-            return files.ToList<FileInfo>();
+            this.fileList = files.ToList<FileInfo>();
         }
 
         /// <summary>
         /// Populates the file listview with all relevant information about each file
         /// </summary>
-        /// <param name="fileList">The list of files to populate the listview with</param>
-        private void populateFileListView(List<FileInfo> fileList)
+        private void populateFileListView()
         {
-            foreach (FileInfo file in fileList)
+            fileListView.Items.Clear();
+
+            foreach (FileInfo file in this.fileList)
             {
                 string defaultStatus = "Ready to process";
 
                 ListViewItem item = new ListViewItem();
                 item.SubItems.Add(file.FullName); // Full path to the file
                 item.SubItems.Add(file.Length.ToFileSize()); // Size of file
-                
+
                 // Item is selected for processing by default.
                 item.Selected = true;
 
@@ -81,7 +98,10 @@ namespace PvrConverter
                 }
 
                 item.SubItems.Add(defaultStatus); // The default status
+                
+                fileListView.Items.Add(item);
             }
+
         }
     }
 }
