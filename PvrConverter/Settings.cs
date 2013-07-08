@@ -27,7 +27,7 @@ namespace PvrConverter
         /// </summary>
         private void setDefaults()
         {
-            Extensions = new List<string>() { ".pvr", ".xxx" };
+            Extensions = new List<string>() { ".pvr" };
             DefaultSearchPath = @"";
             DefaultOutDirectory = @"";
         }
