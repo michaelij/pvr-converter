@@ -8,6 +8,21 @@ namespace PvrConverter
     public class Settings
     {
         /// <summary>
+        /// Extensions that the PVR files could have
+        /// </summary>
+        public List<string> Extensions = new List<string>() { "pvr" };
+
+        /// <summary>
+        /// What directory to search by default when the app starts up.
+        /// </summary>
+        public string DefaultSearchPath = @"";
+
+        /// <summary>
+        /// What directory to send files to once they have been processed.
+        /// </summary>
+        public string DefaultOutDirectory = @"";
+
+        /// <summary>
         /// Load up a settings instance from file given a filename
         /// Will create a new settings file if one does not already exist 
         /// </summary>
