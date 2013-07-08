@@ -16,7 +16,7 @@ namespace PvrConverter
                 throw new ArgumentNullException("extensions");
             }
 
-            IEnumerable<FileInfo> files = dir.EnumerateFiles();
+            IEnumerable<FileInfo> files = dir.EnumerateFiles("*", SearchOption.AllDirectories);
             return files.Where(f => extensions.Contains(f.Extension));
         }
     }
