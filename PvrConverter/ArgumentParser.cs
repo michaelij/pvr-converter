@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
 
@@ -13,12 +15,15 @@ namespace PvrConverter
     public class ArgumentParser
     {
         // Variables
-        private StringDictionary Parameters;
+        private StringDictionary namedParameters;
+        private ArrayList unnamedParameters;
 
         // Constructor
         public ArgumentParser(string[] Args)
         {
-            Parameters = new StringDictionary();
+            namedParameters = new StringDictionary();
+            unnamedParameters = new ArrayList();
+
             Regex Spliter = new Regex(@"^-{1,2}|^/|=|:",
                 RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -35,79 +40,106 @@ namespace PvrConverter
             //   /param4=happy -param5 '--=nice=--'
             foreach (string Txt in Args)
             {
-                // Look for new parameters (-,/ or --) and a
-                // possible enclosed value (=,:)
-                Parts = Spliter.Split(Txt, 3);
-
-                switch (Parts.Length)
+                if (Txt.StartsWith("-") || Txt.StartsWith("/") || Parameter != null)
                 {
-                    // Found a value (for the last parameter 
-                    // found (space separator))
-                    case 1:
-                        if (Parameter != null)
-                        {
-                            if (!Parameters.ContainsKey(Parameter))
+                    // A named param (key & value) has been provided
+                    // Look for new parameters (-,/ or --) and a
+                    // possible enclosed value (=,:)
+                    Parts = Spliter.Split(Txt, 3);
+
+                    switch (Parts.Length)
+                    {
+                        // Found a value (for the last parameter 
+                        // found (space separator))
+                        case 1:
+                            if (Parameter != null)
                             {
-                                Parts[0] =
-                                    Remover.Replace(Parts[0], "$1");
+                                if (!namedParameters.ContainsKey(Parameter))
+                                {
+                                    Parts[0] =
+                                        Remover.Replace(Parts[0], "$1");
 
-                                Parameters.Add(Parameter, Parts[0]);
+                                    namedParameters.Add(Parameter, Parts[0]);
+                                }
+                                Parameter = null;
                             }
+                            // else Error: no parameter waiting for a value (skipped)
+                            break;
+
+                        // Found just a parameter
+                        case 2:
+                            // The last parameter is still waiting. 
+                            // With no value, set it to true.
+                            if (Parameter != null)
+                            {
+                                if (!namedParameters.ContainsKey(Parameter))
+                                    namedParameters.Add(Parameter, "true");
+                            }
+                            Parameter = Parts[1];
+                            break;
+
+                        // Parameter with enclosed value
+                        case 3:
+                            // The last parameter is still waiting. 
+                            // With no value, set it to true.
+                            if (Parameter != null)
+                            {
+                                if (!namedParameters.ContainsKey(Parameter))
+                                    namedParameters.Add(Parameter, "true");
+                            }
+
+                            Parameter = Parts[1];
+
+                            // Remove possible enclosing characters (",')
+                            if (!namedParameters.ContainsKey(Parameter))
+                            {
+                                Parts[2] = Remover.Replace(Parts[2], "$1");
+                                namedParameters.Add(Parameter, Parts[2]);
+                            }
+
                             Parameter = null;
-                        }
-                        // else Error: no parameter waiting for a value (skipped)
-                        break;
-
-                    // Found just a parameter
-                    case 2:
-                        // The last parameter is still waiting. 
-                        // With no value, set it to true.
-                        if (Parameter != null)
-                        {
-                            if (!Parameters.ContainsKey(Parameter))
-                                Parameters.Add(Parameter, "true");
-                        }
-                        Parameter = Parts[1];
-                        break;
-
-                    // Parameter with enclosed value
-                    case 3:
-                        // The last parameter is still waiting. 
-                        // With no value, set it to true.
-                        if (Parameter != null)
-                        {
-                            if (!Parameters.ContainsKey(Parameter))
-                                Parameters.Add(Parameter, "true");
-                        }
-
-                        Parameter = Parts[1];
-
-                        // Remove possible enclosing characters (",')
-                        if (!Parameters.ContainsKey(Parameter))
-                        {
-                            Parts[2] = Remover.Replace(Parts[2], "$1");
-                            Parameters.Add(Parameter, Parts[2]);
-                        }
-
-                        Parameter = null;
-                        break;
+                            break;
+                    }
+                }
+                else
+                {
+                    // We have an unnamed parameter
+                    unnamedParameters.Add(Txt);
                 }
             }
             // In case a parameter is still waiting
             if (Parameter != null)
             {
-                if (!Parameters.ContainsKey(Parameter))
-                    Parameters.Add(Parameter, "true");
+                if (!namedParameters.ContainsKey(Parameter))
+                    namedParameters.Add(Parameter, "true");
             }
         }
 
-        // Retrieve a parameter value if it exists 
-        // (overriding C# indexer property)
+        /// <summary>
+        /// Retrieve a parameter value if it exists 
+        /// (overriding C# indexer property)
+        /// </summary>
+        /// <param name="Param">The name of the parameter to get</param>
+        /// <returns></returns>
         public string this[string Param]
         {
             get
             {
-                return (Parameters[Param]);
+                return (namedParameters[Param]);
+            }
+        }
+
+        /// <summary>
+        /// Retrieve an unnamed parameter by index if it exists 
+        /// (overriding C# indexer property)
+        /// </summary>
+        /// <param name="index">The index of the parameter to get</param>
+        /// <returns></returns>
+        public string this[int index]
+        {
+            get
+            {
+                return (index < unnamedParameters.Count) ? (string)unnamedParameters[index] : null;
             }
         }
 
@@ -119,12 +151,12 @@ namespace PvrConverter
         /// <returns>A parameter value or the given default value</returns>
         public string GetOrDefault(string key, string defaultValue)
         {
-            if (!Parameters.ContainsKey(key))
+            if (!namedParameters.ContainsKey(key))
             {
                 return defaultValue;
             }
 
-            return Parameters[key];
+            return namedParameters[key];
         }
     }
 }
