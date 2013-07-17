@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArgumentParser.cs" />
+    <Compile Include="CommandLineTool.cs" />
     <Compile Include="DirectoryInfoExtensions.cs" />
     <Compile Include="FriendlyFilesizeExtensions.cs" />
     <Compile Include="MainForm.cs">

@@ -27,6 +27,10 @@ namespace PvrConverter
         /// </summary>
         private bool closeForCommandLine;
 
+        public delegate void ReceiveProcessOuputDelegate(string text);
+        public ReceiveProcessOuputDelegate receiveProcessOutputDelegate;
+        public ReceiveProcessOuputDelegate receiveProcessErrorDelegate;
+
         public MainForm()
         {
             closeForCommandLine = false;
@@ -37,6 +41,12 @@ namespace PvrConverter
             : this()
         {
             closeForCommandLine = true;
+
+            ArgumentParser commandLine = new ArgumentParser(args);
+            if (commandLine["out"] != null)
+            {
+                Console.WriteLine("Outfile is = ");
+            }
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -48,6 +58,9 @@ namespace PvrConverter
                 this.Close();
                 return;
             }
+
+            receiveProcessOutputDelegate = new ReceiveProcessOuputDelegate(receiveProcessOutput);
+            receiveProcessErrorDelegate = new ReceiveProcessOuputDelegate(receiveProcessError);
 
             populateFileList();
             setupFileListView();
@@ -101,7 +114,24 @@ namespace PvrConverter
                 
                 fileListView.Items.Add(item);
             }
+        }
 
+        /// <summary>
+        /// Receive output from a tool process
+        /// </summary>
+        /// <param name="output">The output</param>
+        private void receiveProcessOutput(string output)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Receive errors from a tool process
+        /// </summary>
+        /// <param name="output">The output</param>
+        private void receiveProcessError(string text)
+        {
+            throw new NotImplementedException();
         }
     }
 }
